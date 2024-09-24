@@ -7,7 +7,6 @@
 #include <sys/mman.h>
 
 #include <dbg.h>
-#include <interpreter.h>
 #include <compiler.h>
 
 
@@ -17,15 +16,6 @@ int main(int argc, char **argv) {
 
 	FILE *script_file = NULL;
 	char *script_path = argv[argc - 1];
-
-	check(argc == 2 || argc == 3, "Usage: %s [--interpreter|--JIT] [script|-]", argv[0]);
-	
-	if(strcmp(argv[1], "--interpreter") == 0) {
-		debug("Using interpreter");
-		use_interpreter = 1;
-	} else {
-		debug("Using JIT compiler");
-	}
 
 	if(strcmp(script_path, "-") == 0) {
 		script_file = stdin;
@@ -45,17 +35,12 @@ int main(int argc, char **argv) {
 	// read instructions file to hand it to the interpreter/compiler
 	command_file = malloc(command_size);
 	check_mem(command_file);
-	
+
 	size_t read_bytes = fread(command_file, 1, command_size, script_file);
 	check(read_bytes == command_size, "fread() failed to read the script");
 	fclose(script_file);
 
-	if(use_interpreter) {
-		interpreter_main_loop(command_file, command_file + command_size);
-	} 
-	else {
-		jit_run(command_file, command_size);
-	}
+    jit_run(command_file, command_size);
 
 error:
 	if(command_file) {
